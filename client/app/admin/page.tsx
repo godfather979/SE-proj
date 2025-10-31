@@ -8,10 +8,15 @@ import type { Scheme } from "@/types/scheme"
 import { fetchSchemes, addScheme, deleteScheme } from "@/lib/api"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+interface ToastMessage {
+  text: string
+  type: "success" | "error"
+}
+
 export default function AdminPage() {
   const [schemes, setSchemes] = useState<Scheme[]>([])
   const [loading, setLoading] = useState(true)
-  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null)
+  const [toast, setToast] = useState<ToastMessage | null>(null)
 
   useEffect(() => {
     loadSchemes()
@@ -22,23 +27,27 @@ export default function AdminPage() {
     try {
       const data = await fetchSchemes()
       setSchemes(data)
-      setMessage(null)
     } catch (error) {
       console.error("Error loading schemes:", error)
-      setMessage({ text: "Failed to load schemes", type: "error" })
+      showToast({ text: "Failed to load schemes", type: "error" })
     } finally {
       setLoading(false)
     }
+  }
+
+  const showToast = (message: ToastMessage) => {
+    setToast(message)
+    setTimeout(() => setToast(null), 2500) // disappears after 2.5s
   }
 
   const handleAddScheme = async (formData: Omit<Scheme, "id">) => {
     try {
       const newScheme = await addScheme(formData)
       setSchemes([newScheme, ...schemes])
-      setMessage({ text: "Scheme added successfully!", type: "success" })
+      showToast({ text: "Scheme added successfully!", type: "success" })
     } catch (error) {
       console.error("Error adding scheme:", error)
-      setMessage({ text: "Failed to add scheme. Please try again.", type: "error" })
+      showToast({ text: "Failed to add scheme. Please try again.", type: "error" })
     }
   }
 
@@ -46,16 +55,27 @@ export default function AdminPage() {
     try {
       await deleteScheme(id)
       setSchemes(schemes.filter((s) => s.SchemeID !== id))
-      setMessage({ text: "Scheme has been removed", type: "success" })
+      showToast({ text: "Scheme has been removed", type: "success" })
     } catch (error) {
       console.error("Error deleting scheme:", error)
-      setMessage({ text: "Failed to delete scheme", type: "error" })
+      showToast({ text: "Failed to delete scheme", type: "error" })
     }
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
       <Navigation />
+
+      {/* Toast popup */}
+      {toast && (
+        <div
+          className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded shadow-lg text-white ${
+            toast.type === "success" ? "bg-green-600" : "bg-red-600"
+          } transition-all`}
+        >
+          {toast.text}
+        </div>
+      )}
 
       {/* Header */}
       <section className="bg-primary/10 border-b border-border py-12 px-4 md:px-6">
@@ -64,17 +84,6 @@ export default function AdminPage() {
           <p className="text-muted-foreground">Manage government schemes</p>
         </div>
       </section>
-
-      {/* Message banner */}
-      {message && (
-        <div
-          className={`max-w-4xl mx-auto my-4 p-4 rounded-lg ${
-            message.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
 
       {/* Content */}
       <section className="py-12 px-4 md:px-6">
