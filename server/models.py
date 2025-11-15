@@ -6,7 +6,7 @@ Base = declarative_base()
 class Scheme(Base):
     __tablename__ = "schemes"
 
-    SchemeID = Column(Integer, primary_key=True, index=True)
+    SchemeID = Column(Integer, primary_key=True, index=True, autoincrement=True)
     Title = Column(Text, nullable=False)
     Description = Column(Text)
     Eligibility = Column(Text)

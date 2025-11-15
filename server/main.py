@@ -26,6 +26,14 @@ def search_schemes(db: Session = Depends(get_db)):
         return schemes
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
+    
+@app.get("/view_schemes", response_model=list[SchemeResponse])
+def search_schemes(db: Session = Depends(get_db)):
+    try:
+        schemes = db.query(Scheme).all()
+        return schemes
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
 # ➕ Route: Add new scheme
 @app.post("/manage_scheme", response_model=SchemeResponse)
